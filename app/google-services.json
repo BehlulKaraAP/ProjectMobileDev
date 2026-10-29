@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "492802742221",
+    "project_id": "grabeat-dbe75",
+    "storage_bucket": "grabeat-dbe75.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:492802742221:android:6c81eda12176477dcf9684",
+        "android_client_info": {
+          "package_name": "com.example.grabeat"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCvqGxxyYFfXf9ZHUW33QgWtbXRrv6j5y8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
