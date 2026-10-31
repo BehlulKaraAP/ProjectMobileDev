@@ -4,44 +4,51 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
+import com.example.grabeat.data.FirebaseRepository
+import com.example.grabeat.screens.AuthScreen
 import com.example.grabeat.ui.theme.GrabEatTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        val repository = FirebaseRepository()
+
         setContent {
             GrabEatTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                var isLoggedIn by remember {
+                    mutableStateOf(repository.currentUser() != null)
+                }
+
+                Surface(color = MaterialTheme.colorScheme.background) {
+                    if (isLoggedIn) {
+                        Surface{
+                            TextButton(
+                                onClick = {
+                                    repository.logout()
+                                    isLoggedIn = false
+                                }
+                            ) {
+                                Text("Uitloggen")
+                            }
+                        }
+                    } else {
+                        AuthScreen(
+                            repository = repository,
+                            onLoginSuccess = {
+                                isLoggedIn = true
+                            }
+                        )
+                    }
                 }
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    GrabEatTheme {
-        Greeting("Android")
     }
 }
