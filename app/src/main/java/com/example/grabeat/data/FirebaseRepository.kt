@@ -1,5 +1,6 @@
 package com.example.grabeat.data
 
+import android.R
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
@@ -57,4 +58,14 @@ class FirebaseRepository {
     }
 
     fun currentUser() = auth.currentUser
+
+    suspend fun getUserRole(uid: String): Result<String> {
+        return try{
+            val document = db.collection("users").document(uid).get().await()
+            val role = document.getString("role") ?: "customer"
+            Result.success(role)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }
