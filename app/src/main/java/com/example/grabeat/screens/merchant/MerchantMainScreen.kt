@@ -8,7 +8,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -17,6 +16,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.grabeat.R
+import com.example.grabeat.data.FirebaseRepository
 
 sealed class MerchantScreen(val route: String, val title: String, val iconResId: Int){
     object Home : MerchantScreen("home", "Home", R.drawable.home)
@@ -26,7 +26,7 @@ sealed class MerchantScreen(val route: String, val title: String, val iconResId:
 }
 
 @Composable
-fun MerchantMainScreen(onLogout: () -> Unit){
+fun MerchantMainScreen(repository: FirebaseRepository, onLogout: () -> Unit){
     val navController = rememberNavController()
     val items = listOf(
         MerchantScreen.Home,
@@ -67,7 +67,7 @@ fun MerchantMainScreen(onLogout: () -> Unit){
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(MerchantScreen.Home.route) { PlaceholderScreen("Home Pagina") }
-            composable(MerchantScreen.AddShop.route) { PlaceholderScreen("Winkel Toevoegen") }
+            composable(MerchantScreen.AddShop.route) { AddShopScreen(repository = repository) }
             composable(MerchantScreen.AddPackage.route) { PlaceholderScreen("Pakket Toevoegen") }
             composable(MerchantScreen.Profile.route) {
                 ProfilePlaceholderScreen("Profiel", onLogout)

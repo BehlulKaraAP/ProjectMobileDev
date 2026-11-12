@@ -1,17 +1,17 @@
 package com.example.grabeat
 
 import android.os.Bundle
+import android.preference.PreferenceManager
+import org.osmdroid.config.Configuration
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.collection.floatSetOf
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,10 +20,22 @@ import com.example.grabeat.data.FirebaseRepository
 import com.example.grabeat.screens.AuthScreen
 import com.example.grabeat.screens.merchant.MerchantMainScreen
 import com.example.grabeat.ui.theme.GrabEatTheme
+import java.io.File
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val ctx = applicationContext
+        Configuration.getInstance().userAgentValue = "GrabEat_App_aubWerk"
+
+        val basePath = File(ctx.cacheDir.absolutePath, "osmdroid")
+        val cachePath = File(ctx.cacheDir.absolutePath, "osmdroid/tiles")
+        Configuration.getInstance().osmdroidBasePath = basePath
+        Configuration.getInstance().osmdroidTileCache = cachePath
+
+        Configuration.getInstance().load(ctx, PreferenceManager.getDefaultSharedPreferences(ctx))
+
         enableEdgeToEdge()
 
         val repository = FirebaseRepository()
@@ -70,7 +82,7 @@ class MainActivity : ComponentActivity() {
                         }else{
                             when (userRole){
                                 "merchant" -> {
-                                    MerchantMainScreen(onLogout = {
+                                    MerchantMainScreen(repository, onLogout = {
                                         repository.logout()
                                         isLoggedIn = false
                                     })

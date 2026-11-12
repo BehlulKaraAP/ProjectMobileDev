@@ -10,17 +10,28 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Color
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+    primary = GrabEatLightGreen,
+    secondary = GrabEatGreen,
+    tertiary = GrabEatLightGreen,
+    background = GrabEatDarkBackground,
+    surface = Color(0xFF1A1C1A),
+    onPrimary = Color(0xFF003300),
+    onBackground = Color(0xFFE3E3E3),
+    onSurface = Color(0xFFE3E3E3)
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
+    primary = GrabEatGreen,
+    secondary = GrabEatDarkGreen,
+    tertiary = GrabEatLightGreen,
+    background = GrabEatBackground,
+    surface = Color.White,
+    onPrimary = Color.White,
+    onBackground = Color(0xFF1A1C1A),
+    onSurface = Color(0xFF1A1C1A)
 
     /* Other default colors to override
     background = Color(0xFFFFFBFE),
@@ -37,7 +48,7 @@ private val LightColorScheme = lightColorScheme(
 fun GrabEatTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {

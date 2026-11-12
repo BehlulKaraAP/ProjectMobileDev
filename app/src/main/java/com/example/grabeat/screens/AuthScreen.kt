@@ -18,6 +18,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.grabeat.data.FirebaseRepository
 import kotlinx.coroutines.launch
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthInvalidUserException
+import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 
 @Composable
 fun AuthScreen(repository: FirebaseRepository, onLoginSuccess: () -> Unit){
@@ -147,7 +151,12 @@ fun AuthScreen(repository: FirebaseRepository, onLoginSuccess: () -> Unit){
                         result.onSuccess {
                             onLoginSuccess()
                         }.onFailure { error ->
-                            errorMessage = error.localizedMessage ?: "Er is iets misgegaan."
+                            errorMessage = when (error){
+                                is FirebaseAuthUserCollisionException -> "Dit e-mailadres is al in gebruik door een ander account!"
+                                is FirebaseAuthInvalidCredentialsException -> "Het ingevoerde e-mailadres of wachtwoord is onjuist."
+                                is FirebaseAuthInvalidUserException -> "Er is geen account gevonden met dit e-mailadres."
+                                else -> "Er is iets misgegaan."
+                            }
                         }
                     }
                 }

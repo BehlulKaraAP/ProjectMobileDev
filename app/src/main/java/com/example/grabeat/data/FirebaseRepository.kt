@@ -4,6 +4,7 @@ import android.R
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
+import com.google.firebase.firestore.GeoPoint
 
 class FirebaseRepository {
 
@@ -64,6 +65,32 @@ class FirebaseRepository {
             val document = db.collection("users").document(uid).get().await()
             val role = document.getString("role") ?: "customer"
             Result.success(role)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun addShop(
+        ownerId: String,
+        name: String,
+        category: String,
+        address: String,
+        city: String,
+        latitude: Double,
+        longitude: Double
+    ): Result<String> {
+        return try {
+            val shopData = hashMapOf(
+                "ownerId" to ownerId,
+                "name" to name,
+                "category" to category,
+                "address" to address,
+                "city" to city,
+                "location" to GeoPoint(latitude, longitude)
+            )
+
+            val document = db.collection("stores").add(shopData).await()
+            Result.success(document.id)
         } catch (e: Exception) {
             Result.failure(e)
         }
