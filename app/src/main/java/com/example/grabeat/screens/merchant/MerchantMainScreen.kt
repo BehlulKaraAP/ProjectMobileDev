@@ -22,7 +22,7 @@ sealed class MerchantScreen(val route: String, val title: String, val iconResId:
     object Home : MerchantScreen("home", "Home", R.drawable.home)
     object AddShop : MerchantScreen("add_shop", "Winkel", R.drawable.store)
     object AddPackage : MerchantScreen("add_package", "Pakket", R.drawable.package_2)
-    object Profile : MerchantScreen("profile", "Profiel", R.drawable.person)
+    object Profile : MerchantScreen("profile", "Profiel", R.drawable.account_circle)
 }
 
 @Composable
