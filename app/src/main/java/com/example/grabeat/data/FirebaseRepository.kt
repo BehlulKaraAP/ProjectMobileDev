@@ -95,4 +95,62 @@ class FirebaseRepository {
             Result.failure(e)
         }
     }
+
+    data class MerchantStore(
+        val id: String,
+        val name: String
+    )
+
+    suspend fun getStoresForOwner(ownerId: String): Result<List<MerchantStore>>{
+        return try {
+            val snapshot = db.collection("stores")
+                .whereEqualTo("ownerId", ownerId)
+                .get()
+                .await()
+
+            val stores = snapshot.documents.map { doc ->
+                MerchantStore(
+                    id = doc.id,
+                    name = doc.getString("name") ?: "Onbekende winkel"
+                )
+            }
+            Result.success(stores)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun addPackage(
+        ownerId: String,
+        storeId: String,
+        storeName: String,
+        title: String,
+        description: String,
+        price: Double,
+        originalValue: Double,
+        quantity: Int,
+        pickupWindow: String,
+        imageBase64: String
+    ): Result<String> {
+        return try {
+            val packageData = hashMapOf(
+                "ownerId" to ownerId,
+                "storeId" to storeId,
+                "storeName" to storeName,
+                "title" to title.trim(),
+                "description" to description.trim(),
+                "price" to price,
+                "originalValue" to originalValue,
+                "quantity" to quantity,
+                "pickupWindow" to pickupWindow.trim(),
+                "imageBase64" to imageBase64,
+                "createdAt" to System.currentTimeMillis()
+            )
+
+            val document = db.collection("bags").add(packageData).await()
+            Result.success(document.id)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

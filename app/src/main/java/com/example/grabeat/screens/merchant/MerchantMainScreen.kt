@@ -68,7 +68,7 @@ fun MerchantMainScreen(repository: FirebaseRepository, onLogout: () -> Unit){
         ) {
             composable(MerchantScreen.Home.route) { PlaceholderScreen("Home Pagina") }
             composable(MerchantScreen.AddShop.route) { AddShopScreen(repository = repository) }
-            composable(MerchantScreen.AddPackage.route) { PlaceholderScreen("Pakket Toevoegen") }
+            composable(MerchantScreen.AddPackage.route) { AddPackageScreen(repository = repository) }
             composable(MerchantScreen.Profile.route) {
                 ProfilePlaceholderScreen("Profiel", onLogout)
             }
