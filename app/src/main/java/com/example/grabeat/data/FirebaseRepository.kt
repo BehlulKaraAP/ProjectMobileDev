@@ -5,6 +5,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import com.google.firebase.firestore.GeoPoint
+import kotlin.text.get
+import kotlin.text.toInt
 
 class FirebaseRepository {
 
@@ -153,4 +155,150 @@ class FirebaseRepository {
             Result.failure(e)
         }
     }
+
+    data class MerchantPackage(
+        val id: String,
+        val storeId: String,
+        val storeName: String,
+        val title: String,
+        val description: String,
+        val price: Double,
+        val originalValue: Double,
+        val quantity: Int,
+        val pickupWindow: String,
+        val imageBase64: String,
+        val createdAt: Long
+    )
+
+    suspend fun getPackagesForOwner(ownerId: String) : Result<List<MerchantPackage>>{
+        return try {
+            val snapshot = db.collection("bags")
+                .whereEqualTo("ownerId", ownerId)
+                .get()
+                .await()
+
+            val packages = snapshot.documents.map { doc ->
+                MerchantPackage(
+                    id = doc.id,
+                    storeId = doc.getString("storeId") ?: "",
+                    storeName = doc.getString("storeName") ?: "Onbekende winkel",
+                    title = doc.getString("title") ?: "",
+                    description = doc.getString("description") ?: "",
+                    price = doc.getDouble("price") ?: 0.0,
+                    originalValue = doc.getDouble("originalValue") ?: 0.0,
+                    quantity = doc.getLong("quantity")?.toInt() ?: 0,
+                    pickupWindow = doc.getString("pickupWindow") ?: "",
+                    imageBase64 = doc.getString("imageBase64") ?: "",
+                    createdAt = doc.getLong("createdAt") ?: 0L
+                )
+            }.sortedByDescending { it.createdAt }
+
+            Result.success(packages)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    data class MerchantReservation(
+        val id: String,
+        val bagId: String,
+        val bagTitle: String,
+        val storeId: String,
+        val storeName: String,
+        val customerId: String,
+        val customerName: String,
+        val pickupCode: String,
+        val quantity: Int,
+        val totalPrice: Double,
+        val pickupWindow: String,
+        val status: String,
+        val createdAt: Long
+    )
+
+    suspend fun getReservationsForOwner(ownerId: String): Result<List<MerchantReservation>> {
+        return try {
+            val storesSnapshot = db.collection("stores")
+                .whereEqualTo("ownerId", ownerId)
+                .get()
+                .await()
+
+            val storeMap = storesSnapshot.documents.associate { doc ->
+                doc.id to (doc.getString("name") ?: "Onbekende winkel")
+            }
+
+            if (storeMap.isEmpty()) {
+                return Result.success(emptyList())
+            }
+
+            val reservationsSnapshot = db.collection("reservations")
+                .whereIn("storeId", storeMap.keys.take(30))
+                .get()
+                .await()
+
+            if (reservationsSnapshot.isEmpty) {
+                return Result.success(emptyList())
+            }
+
+            val bagsSnapshot = db.collection("bags")
+                .whereEqualTo("ownerId", ownerId)
+                .get()
+                .await()
+
+            val bagMap = bagsSnapshot.documents.associateBy { it.id }
+
+            val customerCache = mutableMapOf<String, String>()
+
+            val reservations = reservationsSnapshot.documents.map { doc ->
+                val storeId = doc.getString("storeId") ?: ""
+                val bagId = doc.getString("bagId") ?: ""
+                val customerId = doc.getString("customerId") ?: ""
+                val quantity = doc.getLong("quantity")?.toInt() ?: 1
+
+                val bagDoc = bagMap[bagId]
+                val bagTitle = bagDoc?.getString("title") ?: "Verrassingspakket"
+                val unitPrice = bagDoc?.getDouble("price") ?: 0.0
+                val pickupWindow = bagDoc?.getString("pickupWindow") ?: "Niet opgegeven"
+
+                val customerName = if (customerId.isNotBlank()) {
+                    customerCache.getOrPut(customerId) {
+                        try {
+                            val userDoc = db.collection("users").document(customerId).get().await()
+                            userDoc.getString("name")
+                                ?: userDoc.getString("email")
+                                ?: "Klant"
+                        } catch (e: Exception) {
+                            "Klant"
+                        }
+                    }
+                } else {
+                    "Klant"
+                }
+
+                val createdAtMillis = doc.getTimestamp("createdAt")?.toDate()?.time
+                    ?: doc.getLong("createdAt")
+                    ?: 0L
+
+                MerchantReservation(
+                    id = doc.id,
+                    bagId = bagId,
+                    bagTitle = bagTitle,
+                    storeId = storeId,
+                    storeName = storeMap[storeId] ?: "Onbekende winkel",
+                    customerId = customerId,
+                    customerName = customerName,
+                    pickupCode = doc.getString("pickupCode") ?: "-",
+                    quantity = quantity,
+                    totalPrice = unitPrice * quantity,
+                    pickupWindow = pickupWindow,
+                    status = doc.getString("status") ?: "reserved",
+                    createdAt = createdAtMillis
+                )
+            }.sortedByDescending { it.createdAt }
+
+            Result.success(reservations)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }
+
