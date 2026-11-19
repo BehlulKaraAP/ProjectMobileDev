@@ -32,6 +32,11 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.core.content.ContextCompat
+import androidx.compose.foundation.clickable
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,7 +54,10 @@ fun AddPackageScreen(repository: FirebaseRepository) {
     var priceText by remember { mutableStateOf("") }
     var originalValueText by remember { mutableStateOf("") }
     var quantityText by remember { mutableStateOf("") }
-    var pickupWindow by remember { mutableStateOf("") }
+    var selectedDate by remember { mutableStateOf("") }
+    var pickupTime by remember { mutableStateOf("") }
+    var showDatePicker by remember { mutableStateOf(false) }
+    val datePickerState = rememberDatePickerState()
 
     var previewBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var imageBase64 by remember { mutableStateOf("") }
@@ -227,13 +235,57 @@ fun AddPackageScreen(repository: FirebaseRepository) {
 
         Spacer(modifier = Modifier.height(12.dp))
 
+        Box(modifier = Modifier.fillMaxWidth()) {
+            OutlinedTextField(
+                value = selectedDate,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Ophaalvenster") },
+                placeholder = { Text("Kies een datum uit de kalender") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .clickable { showDatePicker = true }
+            )
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
         OutlinedTextField(
-            value = pickupWindow,
-            onValueChange = { pickupWindow = it },
-            label = { Text("Ophaalvenster (bijv. 17:30 - 18:30)") },
+            value = pickupTime,
+            onValueChange = { pickupTime = it },
+            label = { Text("Ophaaltijdstip (bijv. 17:30 - 18:30)") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true
         )
+
+        if (showDatePicker) {
+            DatePickerDialog(
+                onDismissRequest = { showDatePicker = false },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            datePickerState.selectedDateMillis?.let { millis ->
+                                selectedDate = formatMillisToDate(millis)
+                            }
+                            showDatePicker = false
+                        }
+                    ) {
+                        Text("Bevestigen")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDatePicker = false }) {
+                        Text("Annuleren")
+                    }
+                }
+            ) {
+                DatePicker(state = datePickerState)
+            }
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -342,7 +394,7 @@ fun AddPackageScreen(repository: FirebaseRepository) {
                             price = price,
                             originalValue = originalValue,
                             quantity = quantity,
-                            pickupWindow = pickupWindow,
+                            pickupWindow = "$selectedDate (${pickupTime.trim()})",
                             imageBase64 = imageBase64
                         )
                         isSaving = false
@@ -355,7 +407,8 @@ fun AddPackageScreen(repository: FirebaseRepository) {
                             priceText = ""
                             originalValueText = ""
                             quantityText = ""
-                            pickupWindow = ""
+                            selectedDate = ""
+                            pickupTime = ""
                             previewBitmap = null
                             imageBase64 = ""
                         }.onFailure { error ->
@@ -372,7 +425,8 @@ fun AddPackageScreen(repository: FirebaseRepository) {
                     priceText.isNotBlank() &&
                     originalValueText.isNotBlank() &&
                     quantityText.isNotBlank() &&
-                    pickupWindow.isNotBlank() &&
+                    selectedDate.isNotBlank() &&
+                    pickupTime.isNotBlank() &&
                     imageBase64.isNotBlank() &&
                     !isSaving &&
                     !isProcessingImage
@@ -430,4 +484,9 @@ suspend fun encodeBitmapToCompressedBase64(originalBitmap: Bitmap): Pair<Bitmap,
 
         Pair(scaledBitmap, base64String)
     }
+}
+private fun formatMillisToDate(millis: Long): String {
+    val formatter = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
+    formatter.timeZone = TimeZone.getTimeZone("UTC")
+    return formatter.format(Date(millis))
 }
